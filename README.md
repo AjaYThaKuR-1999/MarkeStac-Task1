@@ -1,174 +1,146 @@
 # Real-Time Inventory Management System
 
-A scalable microservices-based inventory management system with real-time notifications using Node.js, Express, MongoDB, and Socket.IO.
+A microservices-based inventory management system using Node.js, Express, MongoDB, and Socket.IO.
 
-## Architecture Overview
+## Architecture & Design Decisions
 
-The system is built using a microservices architecture with two main services:
+The system is designed as two independent microservices:
 
-1. **Inventory Service**
-   - Handles CRUD operations for inventory items
-   - Manages stock levels and updates
-   - Implements real-time stock notifications
-   - Uses MongoDB for persistent storage
+1. **Inventory Service**: Handles CRUD operations for inventory items using MongoDB.
+2. **Notification Service**: Manages real-time updates using Socket.IO.
 
-2. **Notification Service**
-   - Handles real-time stock update notifications using Socket.IO
-   - Maintains a log of all stock updates
-   - Broadcasts updates to connected clients
-   - Stores update history in MongoDB
+Key design decisions:
+- Microservices architecture for separation of concerns
+- Containerization with Docker for consistent deployment
+- MongoDB for flexible data storage
 
-## Technical Stack
+## Local Development Setup (Docker)
 
-- **Backend**: Node.js 18.x with Express.js
-- **Database**: MongoDB
-- **Real-time Communication**: Socket.IO
-- **Containerization**: Docker & Docker Compose
-- **Caching**: Redis
-- **Authentication**: JWT
-- **Security**: Helmet, Rate Limiting
+1. Prerequisites:
+   - Docker & Docker Compose
+   - Git
 
-## Project Structure
-
-```
-inventory-management/
-├── inventory-service/
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── utils/
-│   │   └── socket.js
-│   ├── tests/
-│   ├── package.json
-│   ├── .env
-│   └── Dockerfile
-├── notification-service/
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── models/
-│   │   └── socket.js
-│   ├── tests/
-│   ├── package.json
-│   ├── .env
-│   └── Dockerfile
-├── docker-compose.yml
-└── README.md
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js >= 18.x
-- MongoDB
-- Redis
-- Docker & Docker Compose
-- Git
-
-### Installation
-
-1. Clone the repository:
+2. Setup:
 ```bash
 git clone [repository-url]
 cd inventory-management
+docker-compose up -d --build
 ```
 
-2. Install dependencies:
+The services will be available at:
+- Inventory Service: http://localhost:5100
+- Notification Service: http://localhost:5101
+
+
+## AWS EC2 Deployment Guide
+
+1. Launch EC2 instance:
+   - Ubuntu Server 20.04 LTS
+   - t3.medium instance type
+   - 20GB EBS volume
+
+2. Security Group Configuration:
+   - HTTP: Port 80 (Inbound)
+   - HTTPS: Port 443 (Inbound)
+   - SSH: Port 22 (Inbound - restrict to your IP)
+   - Custom TCP: Port 27017 (MongoDB)
+   - Custom TCP: Port 5100-5101 (Application)
+
+3. Environment Setup:
 ```bash
-cd inventory-service
-npm install
-cd ../notification-service
-npm install
+# Install Docker and Docker Compose
+sudo apt update
+sudo apt install docker.io docker-compose
+sudo usermod -aG docker $USER
+
+# Clone and deploy
+sudo mkdir -p /opt/inventory-system
+cd /opt/inventory-system
+git clone [repository-url]
+cd inventory-management
+
+# Configure environment variables
+sudo cp .env.example .env
+# Edit .env with production values
+
+# Run the application
+sudo docker-compose up -d
 ```
 
-3. Set up environment variables:
-Create `.env` files in both services with the following variables:
-```bash
-# inventory-service/.env
-PORT=3000
-NODE_ENV=development
-MONGODB_URI=mongodb://mongodb:27017/inventory
-REDIS_URL=redis://redis:6379
-JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=24h
-RATE_LIMIT_WINDOW=15
-RATE_LIMIT_MAX_REQUESTS=100
-
-# notification-service/.env
-PORT=3001
-NODE_ENV=development
-MONGODB_URI=mongodb://mongodb:27017/inventory
-```
-
-4. Start services using Docker:
-```bash
-docker-compose up --build
-```
+4. Post-deployment:
+   - Set up SSL/TLS using Let's Encrypt
+   - Configure Nginx as a reverse proxy
+   - Set up monitoring with Prometheus/Grafana
+   - Configure backup solutions for MongoDB
 
 ## API Documentation
 
-### Inventory Service Endpoints
+### Inventory Service
 
-- **POST /api/items**
-  - Create a new inventory item
-  - Required fields: name, quantity, price
-  - Response: 201 Created
+#### Create Item
+```http
+POST /api/v1/items/create
+Content-Type: application/json
 
-- **GET /api/items**
-  - List all inventory items
-  - Query params: page, limit, search, category, status
-  - Response: 200 OK
-
-- **GET /api/items/:id**
-  - Get item by ID
-  - Response: 200 OK or 404 Not Found
-
-- **PUT /api/items/:id**
-  - Update item details
-  - Response: 200 OK or 404 Not Found
-
-- **DELETE /api/items/:id**
-  - Delete item
-  - Response: 200 OK or 404 Not Found
-
-### Socket.IO Events
-
-- **stockUpdate**
-  - Emitted when stock changes
-  - Payload: { type: 'create/update/delete', item: { ... } }
-
-## Testing
-
-Run tests using:
-```bash
-npm test
+{
+    "name": "string",
+    "description": "string",
+    "quantity": number,
+    "reorderLevel": number,
+    "unitPrice": number
+}
 ```
 
-## Deployment Guide (AWS EC2)
+#### Get All Items
+```http
+GET /api/v1/items/getAll
+```
 
-### Security Group Configuration
+#### Get Item by ID
+```http
+GET /api/v1/items/get/:id
+```
 
-1. Create security group with these inbound rules:
-   - HTTP: Port 80
-   - HTTPS: Port 443
-   - Custom TCP: Port 3000 (Inventory Service)
-   - Custom TCP: Port 3001 (Notification Service)
-   - MongoDB: Port 27017
-   - Redis: Port 6379
+#### Update Item
+```http
+PUT /api/v1/items/update/:id
+Content-Type: application/json
 
-2. Create IAM roles:
-   - EC2 Instance Profile
-   - MongoDB Atlas Access Role (if using Atlas)
+{
+    "name": "string",
+    "description": "string",
+    "quantity": number,
+    "reorderLevel": number,
+    "unitPrice": number
+}
+```
 
-### Environment Setup
+#### Delete Item
+```http
+DELETE /api/v1/items/delete/:id
+```
 
-1. Install Docker and Docker Compose
-2. Configure environment variables
-3. Deploy using docker-compose
-4. Set up SSL certificates
-5. Configure load balancer
+## Security Features
+
+- Environment-based configuration
+- Input validation
+- CORS policy
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+MIT License
+
+## Support
+
+For support, please open an issue in the GitHub repository. Configure load balancer
 
 ## Architecture Decisions
 
