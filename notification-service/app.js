@@ -6,6 +6,8 @@ const helmet = require('helmet');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { logger } = require('./src/utils/logger');
+const path = require('path');
+const fs = require('fs');
 
 // Middleware Parsing
 const app = express();
@@ -16,6 +18,20 @@ app.use(helmet());
 
 // Routes
 require('./src/routes/notification.routes')(app);
+
+// Health Check Route
+app.get('/', (req, res) => {
+  const htmlFilePath = path.join(__dirname, 'views', 'healthCheck.html');
+
+  fs.readFile(htmlFilePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading HTML file', err);
+      return res.status(500).send('Server error');
+    }
+    const replacedHTML = data.replace('<!--PORT_PLACEHOLDER-->', process.env.PORT);
+    res.send(replacedHTML);
+  });
+});
 
 // HTTP & WebSocket server
 const httpServer = createServer(app);

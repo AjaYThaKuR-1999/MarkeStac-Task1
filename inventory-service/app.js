@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { logger } = require('./src/utils/logger');
+const path = require('path');
+const fs = require('fs');
 
 // Middleware
 const app = express();
@@ -12,6 +14,20 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 require('./src/routes/item.routes')(app);
+
+// Health Check Route
+app.get('/', (req, res) => {
+  const htmlFilePath = path.join(__dirname, 'views', 'healthCheck.html');
+
+  fs.readFile(htmlFilePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading HTML file', err);
+      return res.status(500).send('Server error');
+    }
+    const replacedHTML = data.replace('<!--PORT_PLACEHOLDER-->', process.env.PORT);
+    res.send(replacedHTML);
+  });
+});
 
 // Error handler
 app.use((err, req, res, next) => {
