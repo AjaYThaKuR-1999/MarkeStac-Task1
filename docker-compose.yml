@@ -7,7 +7,7 @@ services:
     ports:
       - 5100:5100 # hostPort:containerPort
     env_file:
-      - ./inventory-service/.env
+      - /home/ubuntu/envFiles/inventory.env
     container_name: inventory-container
 
   notification:
@@ -18,5 +18,5 @@ services:
     ports:
       - "5101:5101"
     env_file:
-      - ./notification-service/.env
+      - /home/ubuntu/envFiles/notification.env
     container_name: notification-container

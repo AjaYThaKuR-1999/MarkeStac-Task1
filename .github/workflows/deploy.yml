@@ -12,11 +12,11 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
         
-        # Copy the pre-existing .env file from the backup location to the project directory
-      - name: Copy .env file from backup
-        run: |
-         cp /var/www/env-backups/.env.probillprod /var/www/probill-runner/_work/RCM-PRO-BILL/RCM-PRO-BILL/.env
-         echo ".env file copied from backup."
+      #   # Copy the pre-existing .env file from the backup location to the project directory
+      # - name: Copy .env file from backup
+      #   run: |
+      #    cp /var/www/env-backups/.env.probillprod /var/www/probill-runner/_work/RCM-PRO-BILL/RCM-PRO-BILL/.env
+      #    echo ".env file copied from backup."
 
       - name: running docker compose
         run: docker-compose -f docker-compose.yaml up -d --build
