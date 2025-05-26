@@ -21,5 +21,5 @@ jobs:
       - name: running docker compose
         run: docker-compose -f docker-compose.yaml up -d --build
 
-      - name: Remove build cache
-        run: docker system prune -a -f
+      # - name: Remove build cache
+      #   run: docker system prune -a -f
