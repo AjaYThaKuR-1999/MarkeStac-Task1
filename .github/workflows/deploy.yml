@@ -19,7 +19,7 @@ jobs:
       #    echo ".env file copied from backup."
 
       - name: running docker compose
-        run: docker-compose -f docker-compose.yaml up -d --build
+        run: docker-compose -f docker-compose.yml up -d --build
 
       # - name: Remove build cache
       #   run: docker system prune -a -f
