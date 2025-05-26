@@ -42,7 +42,6 @@ const io = new Server(httpServer, {
   }
 });
 
-// Expose io globally for reuse (optional alternative to a separate file)
 app.set('io', io);
 
 // Socket connection log

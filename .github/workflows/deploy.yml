@@ -12,6 +12,12 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - name: Stop and remove old containers
+        run: docker-compose -f docker-compose.yml down
+
+      - name: Remove dangling images
+        run: docker image prune -f
+
       - name: running docker compose
         run: docker-compose -f docker-compose.yml up -d --build
 
